@@ -5,7 +5,7 @@ import tqdm
 import os
 from operator import itemgetter
 
-from pytorch_hackathon import rss_feeds, zero_shot_learning
+from pytorch_hackathon import zero_shot_learning
 import ktrain
 import seaborn as sns
 from utils import streamlit_tqdm
@@ -15,7 +15,7 @@ st.title('Zero-shot RSS feed article classifier')
 cm = sns.light_palette("green", as_cmap=True)
 topic_strings = list(pd.read_table('data/topics.txt', header=None).iloc[:,0].values)
 rss_feed_urls = list(pd.read_table('data/feeds.txt', header=None).iloc[:,0].values)
-rss_feed_urls = rss_feeds.rss_feed_urls.copy()
+rss_feed_urls = zero_shot_learning.rss_feed_urls.copy()
 
 
 model_device = st.selectbox("Model device", ["cpu", "cuda"], index=1)
@@ -23,7 +23,7 @@ model_device = st.selectbox("Model device", ["cpu", "cuda"], index=1)
 
 @st.cache(allow_output_mutation=True)
 def get_feed_df():
-    return rss_feeds.get_feed_df(rss_feed_urls)
+    return zero_shot_learning.get_feed_df(rss_feed_urls)
 
 
 feed_df = get_feed_df()
@@ -47,11 +47,11 @@ def get_displayed_df():
     return feed_df[['title', 'text']].join(results_df)
 
 
-selected_df = get_displayed_df()
+selected_df = get_displayed_df().reset_index(drop=True)
 selected_df['text'] = selected_df['text'].apply(lambda s: s[:1000])
 topics = st.multiselect('Choose topics', topic_strings, default=[topic_strings[0]])
 sort_by = st.selectbox("Sort by", topics)
-display_df = selected_df[selected_df[topics].min(axis=1) > 0.5].sort_values(sort_by, ascending=False).reset_index(drop=True)
+display_df = selected_df[selected_df[topics].min(axis=1) > 0.5].sort_values(sort_by, ascending=False)
 
 st.markdown('## Articles on {}'.format(', '.join(topics)))
 
