@@ -1,0 +1,16 @@
+https://us-east1-ml-feeds.cloudfunctions.net/pwc/latest
+https://news.ycombinator.com/rss
+https://medium.com/feed/the-artificial-impostor
+https://medium.com/feed/pytorch
+https://medium.com/feed/dair.ai
+https://medium.com/feed/towards-artificial-intelligence
+https://medium.com/feed/swlh
+https://medium.com/feed/@ODSC
+https://medium.com/feed/doctrine
+https://medium.com/feed/paperswithcode
+https://www.reddit.com/r/MachineLearning/.rss
+https://www.reddit.com/r/deeplearning/.rss
+https://www.reddit.com/r/datascience/.rss
+https://www.reddit.com/r/cognitivelinguistics/.rss
+https://www.reddit.com/r/TopOfArxivSanity/.rss
+https://www.reddit.com/r/kaggle/.rss
