@@ -5,7 +5,7 @@ import tqdm
 import os
 from operator import itemgetter
 
-from pytorch_hackathon import zero_shot_learning
+from pytorch_hackathon import rss_feeds, zero_shot_learning
 import ktrain
 import seaborn as sns
 from utils import streamlit_tqdm
@@ -15,7 +15,7 @@ st.title('Zero-shot RSS feed article classifier')
 cm = sns.light_palette("green", as_cmap=True)
 topic_strings = list(pd.read_table('data/topics.txt', header=None).iloc[:,0].values)
 rss_feed_urls = list(pd.read_table('data/feeds.txt', header=None).iloc[:,0].values)
-rss_feed_urls = zero_shot_learning.rss_feed_urls.copy()
+rss_feed_urls = rss_feeds.rss_feed_urls.copy()
 
 
 model_device = st.selectbox("Model device", ["cpu", "cuda"], index=1)
@@ -23,7 +23,7 @@ model_device = st.selectbox("Model device", ["cpu", "cuda"], index=1)
 
 @st.cache(allow_output_mutation=True)
 def get_feed_df():
-    return zero_shot_learning.get_feed_df(rss_feed_urls)
+    return rss_feeds.get_feed_df(rss_feed_urls)
 
 
 feed_df = get_feed_df()
