@@ -1,1 +1,11 @@
+pandas
+numpy
+feedparser
+transformers
+bs4
+streamlit
+tqdm
+scikit-learn
+haystack
+farm-haystack
 goose3

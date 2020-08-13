@@ -5,7 +5,7 @@ import tqdm
 import os
 from operator import itemgetter
 
-from pytorch_hackathon import rss_feeds, zero_shot_learning
+from pytorch_hackathon import rss_feeds, zero_shot_learning, haystack_search
 import ktrain
 import seaborn as sns
 from utils import streamlit_tqdm
@@ -18,12 +18,13 @@ rss_feed_urls = list(pd.read_table('data/feeds.txt', header=None).iloc[:,0].valu
 rss_feed_urls = rss_feeds.rss_feed_urls.copy()
 
 
-model_device = st.selectbox("Model device", ["cpu", "cuda"], index=1)
+model_device = st.selectbox("Model device", ["cpu", "cuda"], index=0)
 
 
 @st.cache(allow_output_mutation=True)
 def get_feed_df():
-    return rss_feeds.get_feed_df(rss_feed_urls)
+    with st.spinner('Retrieving articles from feeds...'):
+        return rss_feeds.get_feed_df(rss_feed_urls)
 
 
 feed_df = get_feed_df()
@@ -47,7 +48,39 @@ def get_displayed_df():
     return feed_df[['title', 'text']].join(results_df)
 
 
-selected_df = get_displayed_df().reset_index(drop=True)
+@st.cache(allow_output_mutation=True)
+def get_retriever(feed_df):
+    with st.spinner('No precomputed topics found, running zero-shot learning...'):
+        __, retriever = haystack_search.setup_document_store_with_retriever(
+            "deepset/sentence_bert",
+            feed_df.copy(),
+            "text",
+            use_gpu=model_device == 'cuda'
+        )
+    return retriever
+
+
+retriever = get_retriever(feed_df)
+
+
+@st.cache
+def get_retrieved_df(topic_strings):
+    results = [
+        result 
+        for topic in topic_strings
+        for result in retriever.retrieve(
+            "text is about {}".format(topic)
+        )
+    ]
+    return haystack_search.get_scored_df(
+        retriever,
+        results,
+        topic_strings
+    ).drop_duplicates(subset='title')
+    
+    
+
+selected_df = get_retrieved_df(topic_strings).reset_index(drop=True)
 selected_df['text'] = selected_df['text'].apply(lambda s: s[:1000])
 topics = st.multiselect('Choose topics', topic_strings, default=[topic_strings[0]])
 sort_by = st.selectbox("Sort by", topics)
