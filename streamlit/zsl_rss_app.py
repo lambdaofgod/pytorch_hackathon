@@ -6,7 +6,6 @@ import os
 from operator import itemgetter
 
 from pytorch_hackathon import rss_feeds, zero_shot_learning, haystack_search
-import ktrain
 import seaborn as sns
 from utils import streamlit_tqdm
 
@@ -36,6 +35,7 @@ def get_displayed_df():
     if cached_result_exists:
         results_df = pd.read_csv(results_csv_path)
     else:
+        import ktrain
         with st.spinner('No precomputed topics found, running zero-shot learning'):
             zsl_clf = ktrain.text.ZeroShotClassifier(device=model_device)
             results_df = zero_shot_learning.get_zero_shot_classification_results_df(
