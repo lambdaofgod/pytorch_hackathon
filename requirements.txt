@@ -7,5 +7,6 @@ streamlit
 tqdm
 scikit-learn
 haystack
+seaborn
 farm-haystack
 goose3
