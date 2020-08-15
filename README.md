@@ -3,7 +3,7 @@
 ## Setup
 
 ```
-pip install nbdev
+pip install nbdev seaborn
 nbdev_build_lib; pip install -e .
 ```
 
