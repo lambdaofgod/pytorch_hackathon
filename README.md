@@ -1,5 +1,7 @@
 # RSS wall app
 
+![](docs/rss_zsl_app.png)
+
 ## Setup
 
 ```
