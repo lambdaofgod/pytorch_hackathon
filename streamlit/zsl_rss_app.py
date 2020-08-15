@@ -5,6 +5,7 @@ import tqdm
 import os
 from operator import itemgetter
 
+import torch
 from pytorch_hackathon import rss_feeds, zero_shot_learning, haystack_search
 import seaborn as sns
 from utils import streamlit_tqdm
@@ -17,7 +18,7 @@ rss_feed_urls = list(pd.read_table('data/feeds.txt', header=None).iloc[:,0].valu
 rss_feed_urls = rss_feeds.rss_feed_urls.copy()
 
 
-model_device = st.selectbox("Model device", ["cpu", "cuda"], index=0)
+model_device = st.selectbox("Model device", ["cpu", "cuda"], index=int(torch.cuda.is_available()))
 
 
 @st.cache(allow_output_mutation=True)
@@ -60,7 +61,8 @@ def get_retriever(feed_df):
     return retriever
 
 
-retriever = get_retriever(feed_df)
+# we need to copy feed_df so that streamlit doesn't recompute embeddings when feed_df changes 
+retriever = get_retriever(feed_df.copy())
 
 
 @st.cache
