@@ -1,4 +1,6 @@
-# RSS wall app
+# NewsBERT 
+
+Using BERT & other transformer models for organizing RSS feed data
 
 ![](docs/rss_zsl_app.png)
 
