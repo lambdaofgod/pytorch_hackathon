@@ -50,19 +50,15 @@ def get_displayed_df():
 
 
 @st.cache(allow_output_mutation=True)
-def get_retriever(feed_df):
+def setup_searcher(feed_df, use_gpu, model_name="deepset/sentence_bert"):
     with st.spinner('No precomputed topics found, running zero-shot learning...'):
-        __, retriever = haystack_search.setup_document_store_with_retriever(
-            "deepset/sentence_bert",
-            feed_df.copy(),
-            "text",
-            use_gpu=model_device == 'cuda'
-        )
-    return retriever
+        searcher = haystack_search.Searcher(model_name, 'text', use_gpu=use_gpu)
+        searcher.add_texts(feed_df)
+    return searcher 
 
 
 # we need to copy feed_df so that streamlit doesn't recompute embeddings when feed_df changes 
-retriever = get_retriever(feed_df.copy())
+searcher = setup_searcher(feed_df, use_gpu=model_device == 'cuda') 
 
 
 @st.cache
@@ -70,16 +66,14 @@ def get_retrieved_df(topic_strings):
     results = [
         result 
         for topic in topic_strings
-        for result in retriever.retrieve(
+        for result in searcher.retriever.retrieve(
             "text is about {}".format(topic)
         )
     ]
-    return haystack_search.get_scored_df(
-        retriever,
+    return searcher.get_topic_score_df(
         results,
         topic_strings
     ).drop_duplicates(subset='title')
-    
     
 
 selected_df = get_retrieved_df(topic_strings).reset_index(drop=True)
