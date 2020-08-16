@@ -42,9 +42,9 @@ class Searcher:
         self.document_store = document_store_cls(
             embedding_field=self.embedding_col,
         )
-        self.retriever = self._setup_retriever(use_gpu)
+        self.retriever = self._setup_retriever(use_gpu, quantize_model)
 
-    def _setup_retriever(self, use_gpu):
+    def _setup_retriever(self, use_gpu, quantize_model):
         retriever = EmbeddingRetriever(
             document_store=self.document_store,
             embedding_model=self.model_name,

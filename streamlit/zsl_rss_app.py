@@ -8,7 +8,6 @@ from operator import itemgetter
 import torch
 from pytorch_hackathon import rss_feeds, zero_shot_learning, haystack_search
 import seaborn as sns
-from utils import streamlit_tqdm
 
 st.title('Zero-shot RSS feed article classifier')
 
@@ -36,6 +35,7 @@ def get_displayed_df():
     if cached_result_exists:
         results_df = pd.read_csv(results_csv_path)
     else:
+        from utils import streamlit_tqdm
         import ktrain
         with st.spinner('No precomputed topics found, running zero-shot learning'):
             zsl_clf = ktrain.text.ZeroShotClassifier(device=model_device)
