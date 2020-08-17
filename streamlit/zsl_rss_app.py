@@ -74,13 +74,16 @@ def get_retrieved_df(topic_strings):
         results,
         topic_strings
     ).drop_duplicates(subset='title')
+
+
+prob = st.slider('Filter by probability', 0, 100, 20)
     
 
 selected_df = get_retrieved_df(topic_strings).reset_index(drop=True)
 selected_df['text'] = selected_df['text'].apply(lambda s: s[:1000])
 topics = st.multiselect('Choose topics', topic_strings, default=[topic_strings[0]])
 sort_by = st.selectbox("Sort by", topics)
-display_df = selected_df[selected_df[topics].min(axis=1) > 0.5].sort_values(sort_by, ascending=False)
+display_df = selected_df[selected_df[topics].min(axis=1) > prob/100].sort_values(sort_by, ascending=False)
 
 st.markdown('## Articles on {}'.format(', '.join(topics)))
 
