@@ -9,24 +9,11 @@ import torch
 from pytorch_hackathon import rss_feeds, zero_shot_learning, haystack_search
 import seaborn as sns
 
-st.title('NewsBERT')
-
-cm = sns.light_palette("green", as_cmap=True)
-topic_strings = list(pd.read_table('data/topics.txt', header=None).iloc[:,0].values)
-rss_feed_urls = list(pd.read_table('data/feeds.txt', header=None).iloc[:,0].values)
-rss_feed_urls = rss_feeds.rss_feed_urls.copy()
-
-
-model_device = st.sidebar.selectbox("Model device", ["cpu", "cuda"], index=int(torch.cuda.is_available()))
-display_mode = st.sidebar.selectbox("Display mode", ["wall", "dataframe"], index=0)
 
 @st.cache(allow_output_mutation=True)
-def get_feed_df():
+def get_feed_df(rss_feed_urls):
     with st.spinner('Retrieving articles from feeds...'):
         return rss_feeds.get_feed_df(rss_feed_urls)
-
-
-feed_df = get_feed_df()
 
 
 def get_displayed_df():
@@ -57,12 +44,8 @@ def setup_searcher(feed_df, use_gpu, model_name="deepset/sentence_bert"):
     return searcher 
 
 
-# we need to copy feed_df so that streamlit doesn't recompute embeddings when feed_df changes 
-searcher = setup_searcher(feed_df.copy(), use_gpu=model_device == 'cuda') 
-
-
 @st.cache
-def get_retrieved_df(topic_strings):
+def get_retrieved_topic_df(searcher, topic_strings):
     results = [
         result 
         for topic in topic_strings
@@ -75,16 +58,7 @@ def get_retrieved_df(topic_strings):
         topic_strings
     ).drop_duplicates(subset='title')
 
-
-prob = st.slider('Filter by probability', 0, 100, 20)
     
-
-selected_df = get_retrieved_df(topic_strings).reset_index(drop=True)
-selected_df['text'] = selected_df['text'].apply(lambda s: s[:1000])
-topics = st.multiselect('Choose topics', topic_strings, default=[topic_strings[0]])
-sort_by = st.selectbox("Sort by", topics)
-
-
 def display_wall(selected_df, sort_by, topics, prob):
     display_df = selected_df[selected_df[topics].max(axis=1) > prob/100].sort_values(sort_by, ascending=False)
 
@@ -104,6 +78,7 @@ def display_wall(selected_df, sort_by, topics, prob):
 
 
 def display_dataframe(selected_df, sort_by, topics, prob):
+    cm = sns.light_palette("green", as_cmap=True)
     display_df = selected_df[selected_df[topics].min(axis=1) > prob/100].sort_values(sort_by, ascending=False)
     st.markdown('## Articles on {}'.format(' and '.join(topics)))
 
@@ -117,4 +92,29 @@ def display_data(display_mode, selected_df, sort_by, topics, prob):
         display_wall(selected_df, sort_by, topics, prob)
 
 
-display_data(display_mode, selected_df, sort_by, topics, prob)
+def main():
+    st.title('NewsBERT')
+
+    # setting up data 
+    topic_strings = list(pd.read_table('data/topics.txt', header=None).iloc[:,0].values)
+    rss_feed_urls = list(pd.read_table('data/feeds.txt', header=None).iloc[:,0].values)
+    rss_feed_urls = rss_feeds.rss_feed_urls.copy()
+
+    # most important parameters - changing them reruns the whole app
+    model_device = st.sidebar.selectbox("Model device", ["cpu", "cuda"], index=int(torch.cuda.is_available()))
+    display_mode = st.sidebar.selectbox("Display mode", ["wall", "dataframe"], index=0)
+
+    feed_df = get_feed_df(rss_feed_urls)
+    # we need to copy feed_df so that streamlit doesn't recompute embeddings when feed_df changes 
+    searcher = setup_searcher(feed_df.copy(), use_gpu=model_device == 'cuda') 
+
+    prob = st.slider('Filter by probability', 0, 100, 20)
+    selected_df = get_retrieved_topic_df(searcher, topic_strings).reset_index(drop=True)
+    selected_df['text'] = selected_df['text'].apply(lambda s: s[:1000])
+    topics = st.multiselect('Choose topics', topic_strings, default=[topic_strings[0]])
+    sort_by = st.selectbox("Sort by", topics)
+    display_data(display_mode, selected_df, sort_by, topics, prob)
+
+    
+if __name__ == '__main__':
+    main()
