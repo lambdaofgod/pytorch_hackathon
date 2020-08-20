@@ -9,6 +9,9 @@ import torch
 from pytorch_hackathon import rss_feeds, zero_shot_learning, haystack_search
 import seaborn as sns
 
+import logging
+logging.disable(logging.CRITICAL)
+
 
 @st.cache(allow_output_mutation=True)
 def get_feed_df(rss_feed_urls):
@@ -58,23 +61,27 @@ def get_retrieved_topic_df(searcher, topic_strings):
         topic_strings
     ).drop_duplicates(subset='title')
 
-    
+
+def get_tile_html(row):
+
+    tile_html_template = """
+        <div class="card">
+        <div class="container">
+            <h4><b><a href="{}">{}</a></b></h4>
+            <p>{}</p>
+        </div>
+        </div>
+    """
+    return tile_html_template.format(row['link'], row['title'], row['text'])
+
+
 def display_wall(selected_df, sort_by, topics, prob):
     display_df = selected_df[selected_df[topics].max(axis=1) > prob/100].sort_values(sort_by, ascending=False)
 
     st.markdown('## Articles on {}'.format(' or '.join(topics)))
 
-    tile_html = """
-    <div class="card">
-    <div class="container">
-        <h4><b><a href="{}">{}</a></b></h4>
-        <p>{}</p>
-    </div>
-    </div>
-    """ 
-
     for __, row in display_df.iterrows():
-        st.markdown(tile_html.format(row['link'], row['title'], row['text']), unsafe_allow_html=True)
+        st.markdown(get_tile_html(row), unsafe_allow_html=True)
 
 
 def display_dataframe(selected_df, sort_by, topics, prob):
@@ -82,7 +89,7 @@ def display_dataframe(selected_df, sort_by, topics, prob):
     display_df = selected_df[selected_df[topics].min(axis=1) > prob/100].sort_values(sort_by, ascending=False)
     st.markdown('## Articles on {}'.format(' and '.join(topics)))
 
-    st.table(display_df[display_df[topics].min(axis=1) > 0.5].style.background_gradient(cmap=cm))
+    st.table(display_df[display_df[topics]].style.background_gradient(cmap=cm))
 
     
 def display_data(display_mode, selected_df, sort_by, topics, prob):
@@ -108,7 +115,7 @@ def main():
     # we need to copy feed_df so that streamlit doesn't recompute embeddings when feed_df changes 
     searcher = setup_searcher(feed_df.copy(), use_gpu=model_device == 'cuda') 
 
-    prob = st.slider('Filter by probability', 0, 100, 20)
+    prob = st.slider('Min topic confidence', 0, 100, 20)
     selected_df = get_retrieved_topic_df(searcher, topic_strings).reset_index(drop=True)
     selected_df['text'] = selected_df['text'].apply(lambda s: s[:1000])
     topics = st.multiselect('Choose topics', topic_strings, default=[topic_strings[0]])
