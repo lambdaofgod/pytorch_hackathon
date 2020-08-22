@@ -29,7 +29,7 @@ lic = licenses[cfg['license']]
 min_python = cfg['min_python']
 
 setuptools.setup(
-    name = 'deeplearning_image_classification',
+    name = 'pytorch_hackathon',
     license = lic[0],
     classifiers = [
         'Development Status :: ' + statuses[int(cfg['status'])],
