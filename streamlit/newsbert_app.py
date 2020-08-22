@@ -48,14 +48,18 @@ def setup_searcher(feed_df, use_gpu, model_name="deepset/sentence_bert"):
 
 
 @st.cache
-def get_retrieved_topic_df(searcher, topic_strings):
-    results = [
-        result 
-        for topic in topic_strings
-        for result in searcher.retriever.retrieve(
-            "text is about {}".format(topic)
-        )
-    ]
+def get_retrieved_topic_df(searcher, topic_strings=None, query=None):
+    assert not topic_strings is None or not query is None, "Must supply either topics or query"
+    if query is not None:
+        results = searcher.retriever.retrieve(query)
+    elif topic_strings is not None:
+        results = [
+            result 
+            for topic in topic_strings
+            for result in searcher.retriever.retrieve(
+                "text is about {}".format(topic)
+            )
+        ]
     return searcher.get_topic_score_df(
         results,
         topic_strings
@@ -91,7 +95,7 @@ def display_dataframe(selected_df, sort_by, topics, prob):
 
     st.table(display_df[display_df[topics]].style.background_gradient(cmap=cm))
 
-    
+
 def display_data(display_mode, selected_df, sort_by, topics, prob):
     if display_mode == "dataframe":
         display_dataframe(selected_df, sort_by, topics, prob)
@@ -116,12 +120,15 @@ def main():
 
     feed_df = get_feed_df(rss_feed_urls)
     # we need to copy feed_df so that streamlit doesn't recompute embeddings when feed_df changes 
-    searcher = setup_searcher(feed_df.copy(), use_gpu=model_device == 'cuda') 
-
+    searcher = setup_searcher(feed_df.copy(), use_gpu=model_device == 'cuda')
     prob = st.slider('Min topic confidence', 0, 100, 20)
-    selected_df = get_retrieved_topic_df(searcher, topic_strings).reset_index(drop=True)
-    selected_df['text'] = selected_df['text'].apply(lambda s: s[:1000])
+    query = st.text_input("Searched phrase", "")
+    if query == "":
+        query = None
     topics = st.multiselect('Choose topics', topic_strings, default=[topic_strings[0]])
+    selected_df = get_retrieved_topic_df(searcher, topics, query).reset_index(drop=True)
+
+    selected_df['text'] = selected_df['text'].apply(lambda s: s[:1000])
     sort_by = st.selectbox("Sort by", topics)
     display_data(display_mode, selected_df, sort_by, topics, prob)
 
