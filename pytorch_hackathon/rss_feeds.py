@@ -2,7 +2,8 @@
 
 __all__ = ['medium_publications', 'medium_url_template', 'medium_url', 'medium_urls', 'subreddits',
            'reddit_url_template', 'reddit_url', 'reddit_urls', 'get_article_text', 'get_feed_article_texts',
-           'get_feed_article_df', 'add_field', 'paperswithcode_url', 'hackernews_url', 'rss_feed_urls', 'get_feed_df']
+           'get_feed_article_df', 'add_field', 'paperswithcode_url', 'hackernews_url', 'rss_feed_urls', 'to_date',
+           'get_feed_df', 'feed_df']
 
 # Cell
 from operator import itemgetter
@@ -74,15 +75,40 @@ hackernews_url = 'https://news.ycombinator.com/rss'
 rss_feed_urls = [paperswithcode_url, hackernews_url] + medium_urls + reddit_urls
 
 # Cell
+from datetime import date
+
+def to_date(x):
+    if str(x)[0].isdigit():
+        return str(x)[:10]
+    else:
+        return str(x).split(' ')[1] + ' ' + str(x).split(' ')[2] + ' ' + str(x).split(' ')[3]
+
+
 def get_feed_df(feed_urls):
     feeds = [
         (feed_url, feedparser.parse(feed_url))
         for feed_url in tqdm.tqdm(feed_urls)
     ]
-    return pd.concat(
+    df = pd.concat(
         [
             add_field(get_feed_article_df(feed), 'feed', feed_url)
             for (feed_url, feed) in feeds
             if len(feed['entries']) > 0
         ]
     )
+
+    df['date'] = df['updated']
+    df['date'] = df['date'].fillna(df['published'])
+    df['date'] = df['date'].fillna(date.today())
+
+    df['date'] = df['date'].apply(lambda x: to_date(x))
+    col = df['date'].unique()
+
+    #return col
+    return df
+
+
+
+feed_df = get_feed_df(rss_feed_urls)
+
+#feedparser.parse('https://news.ycombinator.com/rss')
