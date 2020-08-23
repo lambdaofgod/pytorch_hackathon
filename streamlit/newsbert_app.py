@@ -102,9 +102,12 @@ def display_data(display_mode, selected_df, sort_by, topics, prob):
 def main():
     st.title('NewsBERT')
 
-    # setting up data 
-    topic_strings = list(pd.read_table('data/topics.txt', header=None).iloc[:,0].values)
-    rss_feed_urls = list(pd.read_table('data/feeds.txt', header=None).iloc[:,0].values)
+    # setting up data
+    file_url_template = "https://raw.githubusercontent.com/lambdaofgod/pytorch_hackathon/master/data/{}.txt"
+    topic_strings_file_url = file_url_template.format('topics')
+    rss_feeds_file_url = file_url_template.format('topics')
+    topic_strings = list(pd.read_table(topic_strings_file_url, header=None).iloc[:,0].values)
+    rss_feed_urls = list(pd.read_table(rss_feeds_file_url, header=None).iloc[:,0].values)
     rss_feed_urls = rss_feeds.rss_feed_urls.copy()
 
     # most important parameters - changing them reruns the whole app
