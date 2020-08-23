@@ -25,7 +25,6 @@ def get_feed_df():
     with st.spinner('Retrieving articles from feeds...'):
         return rss_feeds.get_feed_df(rss_feed_urls)
 
-
 feed_df = get_feed_df()
 
 
@@ -95,12 +94,15 @@ def display_wall(selected_df, sort_by, topics, prob):
     <div class="container">
         <h4><b><a href="{}">{}</a></b></h4>
         <p>{}</p>
+        <p>{}</p>
     </div>
     </div>
     """ 
 
     for __, row in display_df.iterrows():
-        st.markdown(tile_html.format(row['link'], row['title'], row['text']), unsafe_allow_html=True)
+        st.markdown(tile_html.format(row['link'], row['title'], row['text'], row['date']), unsafe_allow_html=True)
+
+
 
 
 def display_dataframe(selected_df, sort_by, topics, prob):
