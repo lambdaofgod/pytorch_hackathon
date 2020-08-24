@@ -73,11 +73,12 @@ def get_tile_html(row):
         <div class="card">
         <div class="container">
             <h4><b><a href="{}">{}</a></b></h4>
-            <p>{}</p>
+            <h4>{}</h4>
+            <p>{}<p>
         </div>
         </div>
     """
-    return tile_html_template.format(row['link'], row['title'], row['text'])
+    return tile_html_template.format(row['link'], row['title'], row['date'], row['text'])
 
 
 def display_wall(selected_df, sort_by, topics, prob):

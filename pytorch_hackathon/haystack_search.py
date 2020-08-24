@@ -101,7 +101,7 @@ class Searcher:
         d['link'] = doc.meta['link']
         return d
 
-    def get_topic_score_df(self, raw_results, topic_strings):
+    def get_topic_score_df(self, raw_results, topic_strings, metadata_cols=['title', 'text', 'link', 'date']):
         topic_query_strings = [
             'text is about {}'.format(topic)
             for topic in topic_strings
