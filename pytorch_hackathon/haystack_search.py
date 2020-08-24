@@ -88,6 +88,7 @@ class Searcher:
         d['title'] = doc.meta['title']
         d['score'] = doc.query_score
         d['link'] = doc.meta['link']
+        d['date'] = doc.meta['date']
         return d
 
     def get_topic_score_df(self, raw_results, topic_strings):
@@ -112,6 +113,7 @@ class Searcher:
         scores_df['title'] = list(map(itemgetter('title'), results))
         scores_df['text'] = list(map(itemgetter('text'), results))
         scores_df['link'] = list(map(itemgetter('link'), results))
+        scores_df['date'] = list(map(itemgetter('date'), results))
 
         scores = pd.DataFrame(metrics.pairwise.cosine_similarity(
             result_embeddings,
