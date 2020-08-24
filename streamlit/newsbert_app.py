@@ -93,14 +93,14 @@ def display_wall(selected_df, sort_by, topics, prob):
     <div class="card">
     <div class="container">
         <h4><b><a href="{}">{}</a></b></h4>
-        <p>{}</p>
+        <h4>{}</h4>
         <p>{}</p>
     </div>
     </div>
     """ 
 
     for __, row in display_df.iterrows():
-        st.markdown(tile_html.format(row['link'], row['title'], row['text'], row['date']), unsafe_allow_html=True)
+        st.markdown(tile_html.format(row['link'], row['title'], row['date'], row['text']), unsafe_allow_html=True)
 
 
 
