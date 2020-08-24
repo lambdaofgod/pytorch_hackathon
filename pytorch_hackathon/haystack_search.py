@@ -12,8 +12,9 @@ from sklearn import metrics
 from nltk import tokenize
 from operator import itemgetter
 
-from haystack.database.elasticsearch import ElasticsearchDocumentStore
-from haystack.database.memory import InMemoryDocumentStore
+import haystack
+from haystack import database
+import haystack.database.memory
 
 from haystack.retriever.dense import EmbeddingRetriever
 from pytorch_hackathon import rss_feeds
@@ -21,7 +22,6 @@ from pytorch_hackathon import rss_feeds
 import seaborn as sns
 
 # Cell
-
 
 
 class Searcher:
@@ -33,7 +33,7 @@ class Searcher:
         use_gpu,
         max_document_length=256,
         quantize_model=True,
-        document_store_cls=InMemoryDocumentStore
+        document_store_cls=database.memory.InMemoryDocumentStore
     ):
         self.text_col = text_col
         self.embedding_col = text_col + '_emb'
@@ -68,6 +68,17 @@ class Searcher:
 
         df[self.embedding_col] = article_embeddings
         self.document_store.write_documents(df.to_dict(orient='records'))
+
+    def search(self, query, top_k=10, **kwargs):
+        if type(self.document_store) is database.elasticsearch.ElasticsearchDocumentStore:
+            querying_fn = self.document_store.query
+        elif type(self.document_store) is database.memory.InMemoryDocumentStore:
+            querying_fn = self.retriever.retrieve
+        return querying_fn(
+            query,
+            top_k=top_k,
+            **kwargs
+        )
 
     @classmethod
     def set_quantized_model(cls, retriever):

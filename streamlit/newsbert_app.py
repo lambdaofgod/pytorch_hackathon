@@ -48,16 +48,17 @@ def setup_searcher(feed_df, use_gpu, model_name="deepset/sentence_bert"):
 
 
 @st.cache
-def get_retrieved_topic_df(searcher, topic_strings=None, query=None):
+def get_retrieved_topic_df(searcher, topic_strings=None, query=None, top_k=20):
     assert not topic_strings is None or not query is None, "Must supply either topics or query"
     if query is not None:
-        results = searcher.retriever.retrieve(query)
+        results = searcher.search(query, top_k=top_k)
     elif topic_strings is not None:
         results = [
             result 
             for topic in topic_strings
-            for result in searcher.retriever.retrieve(
-                "text is about {}".format(topic)
+            for result in searcher.search(
+                "text is about {}".format(topic),
+                top_k=top_k
             )
         ]
     return searcher.get_topic_score_df(
@@ -121,12 +122,16 @@ def main():
     feed_df = get_feed_df(rss_feed_urls)
     # we need to copy feed_df so that streamlit doesn't recompute embeddings when feed_df changes 
     searcher = setup_searcher(feed_df.copy(), use_gpu=model_device == 'cuda')
-    prob = st.slider('Min topic confidence', 0, 100, 20)
-    query = st.text_input("Searched phrase", "")
-    if query == "":
-        query = None
+
+    text_query = st.text_input("Searched phrase", "")
+    embedded_query = st.text_input("Searched phrase (embedding search)", "")
+    if embedded_query == "":
+        embedded_query = None
     topics = st.multiselect('Choose topics', topic_strings, default=[topic_strings[0]])
-    selected_df = get_retrieved_topic_df(searcher, topics, query).reset_index(drop=True)
+    prob = st.slider('Min topic confidence', 0, 100, 20)
+    selected_df = get_retrieved_topic_df(searcher, topics, embedded_query).reset_index(drop=True)
+    if text_query != "":
+        selected_df = selected_df[selected_df['text'].str.lower().str.contains(text_query.lower())]
 
     selected_df['text'] = selected_df['text'].apply(lambda s: s[:1000])
     sort_by = st.selectbox("Sort by", topics)
