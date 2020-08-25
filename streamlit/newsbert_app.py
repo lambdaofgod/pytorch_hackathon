@@ -48,17 +48,17 @@ def setup_searcher(feed_df, use_gpu, model_name="deepset/sentence_bert"):
 
 
 @st.cache
-def get_retrieved_topic_df(searcher, topic_strings=None, query=None, top_k=20):
+def get_retrieved_topic_df(searcher, topic_strings=None, query=None, articles_per_topic=50):
     assert not topic_strings is None or not query is None, "Must supply either topics or query"
     if query is not None:
-        results = searcher.search(query, top_k=top_k)
+        results = searcher.search(query, top_k=100)
     elif topic_strings is not None:
         results = [
             result 
             for topic in topic_strings
             for result in searcher.search(
                 "text is about {}".format(topic),
-                top_k=top_k
+                top_k=articles_per_topic
             )
         ]
     return searcher.get_topic_score_df(
@@ -118,7 +118,7 @@ def main():
     # most important parameters - changing them reruns the whole app
     model_device = st.sidebar.selectbox("Model device", ["cpu", "cuda"], index=int(torch.cuda.is_available()))
     display_mode = st.sidebar.selectbox("Display mode", ["wall", "dataframe"], index=0)
-
+    articles_per_topic = st.sidebar.number_input("Articles per topic", min_value=1, value=50)
     feed_df = get_feed_df(rss_feed_urls)
     # we need to copy feed_df so that streamlit doesn't recompute embeddings when feed_df changes 
     searcher = setup_searcher(feed_df.copy(), use_gpu=model_device == 'cuda')
@@ -129,7 +129,7 @@ def main():
         embedded_query = None
     topics = st.multiselect('Choose topics', topic_strings, default=[topic_strings[0]])
     prob = st.slider('Min topic confidence', 0, 100, 20)
-    selected_df = get_retrieved_topic_df(searcher, topics, embedded_query).reset_index(drop=True)
+    selected_df = get_retrieved_topic_df(searcher, topics, embedded_query, articles_per_topic).reset_index(drop=True)
     if text_query != "":
         selected_df = selected_df[selected_df['text'].str.lower().str.contains(text_query.lower())]
 
