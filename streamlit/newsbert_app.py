@@ -94,7 +94,7 @@ def display_dataframe(selected_df, sort_by, topics, prob):
     display_df = selected_df[selected_df[topics].min(axis=1) > prob/100].sort_values(sort_by, ascending=False)
     st.markdown('## Articles on {}'.format(' and '.join(topics)))
 
-    st.table(display_df[display_df[topics]].style.background_gradient(cmap=cm))
+    st.table(display_df[['title', 'text', 'date'] + topics].style.background_gradient(cmap=cm))
 
 
 def display_data(display_mode, selected_df, sort_by, topics, prob):
