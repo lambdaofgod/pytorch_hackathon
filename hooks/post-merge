@@ -1,0 +1,4 @@
+#!/bin/sh
+nbdev_build_lib; pip install -e . &
+exit 0
+
