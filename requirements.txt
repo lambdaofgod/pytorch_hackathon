@@ -6,7 +6,7 @@ bs4
 streamlit
 tqdm
 scikit-learn
-haystack
 seaborn
 farm-haystack
 goose3
+BeautifulSoup4
